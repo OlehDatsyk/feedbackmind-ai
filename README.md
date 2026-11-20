@@ -6,7 +6,7 @@ FeedbackMind AI is a multi-tenant SaaS application that collects customer feedba
 
 > **Honesty by design.** Every figure is computed from stored records. Statistical estimates, observed history and AI-generated interpretations are labelled separately. Without an AI provider the app still works (rule-based analysis, statistics, imports, reports) and says clearly that AI is unavailable. Nothing is invented: no fake integrations, no fake AI output, no hard-coded statistics.
 
-- **Live demo:** see [Deployment](#deployment) (URLs are listed in `INSTRUCTION.md` once deployed)
+- **Live demo:** https://feedbackmind-ai-frontend.onrender.com (API: https://feedbackmind-ai-api.onrender.com/api/docs) - temporary demo storage: data is erased whenever the free server restarts; use synthetic data only
 - **API docs:** `/api/docs` on the backend (OpenAPI / Swagger UI)
 
 ---

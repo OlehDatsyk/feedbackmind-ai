@@ -6,10 +6,15 @@ Operating guide: local use, configuration, deployment on Render, and day-to-day 
 
 | Item | Value |
 | --- | --- |
-| Frontend | _not deployed yet - see section 5_ |
-| Backend API | _not deployed yet_ |
-| API documentation | `<backend URL>/api/docs` |
-| Health checks | `<backend URL>/health`, `<backend URL>/health/ready` |
+| Frontend | https://feedbackmind-ai-frontend.onrender.com |
+| Backend API | https://feedbackmind-ai-api.onrender.com |
+| API documentation | https://feedbackmind-ai-api.onrender.com/api/docs |
+| Health checks | https://feedbackmind-ai-api.onrender.com/health, https://feedbackmind-ai-api.onrender.com/health/ready |
+| Hosting | Render free plan (Frankfurt), Blueprint `feedbackmind-ai`, auto-deploy from `main` |
+| Data storage | **Temporary demo** (SQLite, `EPHEMERAL_DEMO=true`): all data is erased when the service restarts, sleeps or redeploys - see section 5 |
+| AI | Not configured (`AI_PROVIDER=none`); rule-based analysis only |
+
+The free API sleeps after ~15 minutes without traffic; the first request afterwards can take up to a minute.
 
 ## 2. Running locally
 
