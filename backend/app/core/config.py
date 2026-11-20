@@ -91,6 +91,10 @@ class Settings(BaseSettings):
     docs_enabled: bool = True
     trusted_proxy_headers: bool = False
 
+    # Temporary demo deployments only: allows SQLite in production. Data on such a deployment is lost whenever
+    # the server restarts or redeploys; the API reports it and the frontend shows a warning banner.
+    ephemeral_demo: bool = False
+
     @field_validator("database_url")
     @classmethod
     def _normalise_db_url(cls, value: str) -> str:
@@ -107,7 +111,12 @@ class Settings(BaseSettings):
             if len(self.secret_key) < 32:
                 raise ValueError("SECRET_KEY must be set to at least 32 random characters in production.")
             if self.database_url.startswith("sqlite"):
-                raise ValueError("SQLite is not supported in production; set DATABASE_URL to PostgreSQL.")
+                if not self.ephemeral_demo:
+                    raise ValueError(
+                        "SQLite is not supported in production; set DATABASE_URL to PostgreSQL "
+                        "(or EPHEMERAL_DEMO=true for a temporary demo whose data is lost on restart)."
+                    )
+                logger.warning("EPHEMERAL_DEMO is on: data is stored in SQLite and is lost on restart or redeploy.")
             if "*" in self.cors_origin_list:
                 raise ValueError("Wildcard CORS origins are not allowed in production.")
         elif not self.secret_key:
@@ -123,6 +132,10 @@ class Settings(BaseSettings):
     @property
     def max_import_bytes(self) -> int:
         return self.max_import_mb * 1024 * 1024
+
+    @property
+    def storage_mode(self) -> str:
+        return "temporary" if self.database_url.startswith("sqlite") and self.ephemeral_demo else "persistent"
 
     @property
     def is_production(self) -> bool:

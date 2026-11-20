@@ -202,7 +202,7 @@ Backend tests run on SQLite by default; set `TEST_DATABASE_URL` to run them on P
 
 ## Deployment
 
-Render Blueprint: [`render.yaml`](render.yaml) creates PostgreSQL, the FastAPI service (with embedded worker) and the static frontend. Step-by-step instructions, the environment checklist and live URLs are in [`INSTRUCTION.md`](INSTRUCTION.md). Docker images: `backend/Dockerfile`, `frontend/Dockerfile`; `docker compose --profile full up` runs everything locally.
+Render Blueprint: [`render.yaml`](render.yaml) creates the FastAPI service (with embedded worker) and the static frontend. The live deployment currently runs as a **temporary demo** on SQLite (data is erased on restart; a banner says so) because the Render workspace's free PostgreSQL slot is in use; switching to PostgreSQL is a one-variable change described in `INSTRUCTION.md`. Step-by-step instructions, the environment checklist and live URLs are in [`INSTRUCTION.md`](INSTRUCTION.md). Docker images: `backend/Dockerfile`, `frontend/Dockerfile`; `docker compose --profile full up` runs everything locally.
 
 ## API
 

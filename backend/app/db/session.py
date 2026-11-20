@@ -17,12 +17,16 @@ _SessionLocal: sessionmaker[Session] | None = None
 def _build_engine(url: str) -> Engine:
     settings = get_settings()
     if url.startswith("sqlite"):
-        engine = create_engine(url, connect_args={"check_same_thread": False})
+        # timeout: wait for the embedded worker's write lock instead of failing with "database is locked".
+        engine = create_engine(url, connect_args={"check_same_thread": False, "timeout": 30})
+        file_db = ":memory:" not in url and url.rstrip("/") not in {"sqlite:", "sqlite+pysqlite:"}
 
         @event.listens_for(engine, "connect")
         def _fk_on(dbapi_conn, _record):  # pragma: no cover - trivial
             cur = dbapi_conn.cursor()
             cur.execute("PRAGMA foreign_keys=ON")
+            if file_db:
+                cur.execute("PRAGMA journal_mode=WAL")  # readers do not block the writer
             cur.close()
 
         return engine

@@ -124,7 +124,7 @@ def create_app() -> FastAPI:
     @app.get("/health", tags=["health"])
     @app.get("/api/v1/health", tags=["health"], include_in_schema=False)
     def health() -> dict:
-        return {"status": "ok", "version": __version__}
+        return {"status": "ok", "version": __version__, "storage": settings.storage_mode}
 
     @app.get("/health/ready", tags=["health"])
     @app.get("/api/v1/health/ready", tags=["health"], include_in_schema=False)
@@ -135,7 +135,14 @@ def create_app() -> FastAPI:
                 conn.execute(text("SELECT 1 FROM alembic_version LIMIT 1"))
         except Exception:  # noqa: BLE001
             return JSONResponse(status_code=503, content={"status": "unavailable", "database": "error"})
-        return JSONResponse({"status": "ok", "database": "ok", "worker": "embedded" if settings.embedded_worker else "external"})
+        return JSONResponse(
+            {
+                "status": "ok",
+                "database": "ok",
+                "storage": settings.storage_mode,
+                "worker": "embedded" if settings.embedded_worker else "external",
+            }
+        )
 
     app.include_router(api_router)
     return app

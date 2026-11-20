@@ -18,6 +18,7 @@ import {
   Settings,
   Siren,
   Tags,
+  TriangleAlert,
   Upload,
   User,
   X,
@@ -47,6 +48,26 @@ const NAV = [
   { to: "/integrations", label: "Integrations", icon: Plug },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
+
+/** Shown when the API runs as a temporary demo (EPHEMERAL_DEMO): its data is erased on restart or redeploy. */
+export function StorageNotice() {
+  const { data } = useQuery({
+    queryKey: ["health"],
+    queryFn: () => api<{ storage?: string }>("/health", { auth: false }),
+    staleTime: 5 * 60_000,
+    retry: false,
+  });
+  if (data?.storage !== "temporary") return null;
+  return (
+    <div role="status" className="flex items-start gap-2 bg-amber-100 px-4 py-2 text-sm text-amber-900 sm:px-6">
+      <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <span>
+        <strong>Temporary demo.</strong> Data on this deployment is erased whenever the server restarts or is redeployed. Do not upload real
+        customer data.
+      </span>
+    </div>
+  );
+}
 
 function Logo() {
   return (
@@ -261,6 +282,7 @@ export function AppLayout() {
         </div>
       )}
       <div className="flex min-w-0 flex-1 flex-col">
+        <StorageNotice />
         <header className="sticky top-0 z-30 border-b border-line bg-white/95 backdrop-blur">
           <div className="flex flex-wrap items-center gap-2 px-4 py-2.5 sm:px-6">
             <button className="rounded-md p-1.5 text-muted hover:bg-slate-100 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
@@ -286,17 +308,20 @@ export function AppLayout() {
 
 export function AuthShell({ children, title, subtitle }: { children: ReactNode; title: string; subtitle?: ReactNode }) {
   return (
-    <div className="flex min-h-full items-center justify-center bg-navy-950 px-4 py-10">
-      <div className="w-full max-w-md">
-        <div className="mb-6 flex justify-center">
-          <Link to="/" aria-label="FeedbackMind AI home">
-            <Logo />
-          </Link>
-        </div>
-        <div className="rounded-2xl bg-white p-6 shadow-xl sm:p-8">
-          <h1 className="text-xl font-semibold">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
-          <div className="mt-6">{children}</div>
+    <div className="flex min-h-full flex-col bg-navy-950">
+      <StorageNotice />
+      <div className="flex flex-1 items-center justify-center px-4 py-10">
+        <div className="w-full max-w-md">
+          <div className="mb-6 flex justify-center">
+            <Link to="/" aria-label="FeedbackMind AI home">
+              <Logo />
+            </Link>
+          </div>
+          <div className="rounded-2xl bg-white p-6 shadow-xl sm:p-8">
+            <h1 className="text-xl font-semibold">{title}</h1>
+            {subtitle && <p className="mt-1 text-sm text-muted">{subtitle}</p>}
+            <div className="mt-6">{children}</div>
+          </div>
         </div>
       </div>
     </div>

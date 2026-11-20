@@ -96,6 +96,17 @@ describe("FeedbackMind frontend", () => {
     expect(await screen.findByText("Enter a valid email address")).toBeInTheDocument();
   });
 
+  it("warns on temporary demo deployments and stays quiet otherwise", async () => {
+    mockFetch({ "GET /health": { body: { status: "ok", storage: "temporary" } } });
+    const first = renderWithProviders(<App />, { route: "/login" });
+    expect(await screen.findByText("Temporary demo.")).toBeInTheDocument();
+    first.unmount();
+    mockFetch({ "GET /health": { body: { status: "ok", storage: "persistent" } } });
+    renderWithProviders(<App />, { route: "/login" });
+    expect(await screen.findByRole("heading", { name: "Sign in" })).toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText("Temporary demo.")).not.toBeInTheDocument());
+  });
+
   it("shows login errors from the API", async () => {
     mockFetch({ "POST /api/v1/auth/login": { status: 401, body: { detail: "Invalid email or password." } } });
     renderWithProviders(<App />, { route: "/login" });

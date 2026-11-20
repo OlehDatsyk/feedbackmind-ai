@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses [Semantic Versioning](https://semver.org/).
 
+## [1.0.1] - 2026-11-20
+
+### Added
+- `EPHEMERAL_DEMO` setting: allows SQLite in production for a clearly labelled temporary demo. `/health` and `/health/ready` report `storage: temporary|persistent`, and the frontend shows a "Temporary demo" banner when data is not persistent.
+
+### Changed
+- The Render Blueprint runs the API in temporary demo mode (SQLite, data erased on restart or redeploy) because the Render workspace's single free PostgreSQL slot is already in use. Switching to PostgreSQL is documented in `render.yaml` and `INSTRUCTION.md`.
+- SQLite connections wait up to 30 s for locks and use WAL journaling, so the embedded worker and API requests do not fail with "database is locked".
+
 ## [1.0.0] - 2026-11-20
 
 ### Added

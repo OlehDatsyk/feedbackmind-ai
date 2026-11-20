@@ -60,6 +60,7 @@ All settings are environment variables (local: `.env` in the repository root; pr
 | `REGISTRATION_ENABLED` | no | no | Allow public sign-up (invitations always work) | `true` / `false` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES`, `REFRESH_TOKEN_EXPIRE_DAYS` | no | no | Session lifetimes | defaults 15 / 14 |
 | `DB_POOL_SIZE`, `DB_MAX_OVERFLOW` | no | no | Connection pool | small values on free databases |
+| `EPHEMERAL_DEMO` | no | no | `true` allows SQLite in production for a **temporary demo**: all data is erased on restart/redeploy and the app shows a warning banner | leave unset (or `false`) for real use |
 | `VITE_API_URL` | frontend build | no (public) | Backend URL compiled into the frontend | the backend URL |
 
 Never put secrets in `VITE_*` variables - they are public in the browser bundle. Never commit `.env`.
@@ -72,21 +73,28 @@ The repository contains a Blueprint (`render.yaml`):
 
 | Service | Type | Notes |
 | --- | --- | --- |
-| `feedbackmind-ai-db` | PostgreSQL (free) | Application data, import files until processed, generated reports. Free databases expire after 30 days unless upgraded. |
 | `feedbackmind-ai-api` | Web service (Python, free) | `alembic upgrade head && uvicorn ...`; health check `/health/ready`; embedded job worker |
 | `feedbackmind-ai-frontend` | Static site (free) | `npm ci && npm run build`, publishes `dist`, SPA rewrite to `/index.html` |
 
+**Current database mode: temporary demo.** Render allows one free PostgreSQL database per workspace and that slot is already used by another project, so the Blueprint runs the API on SQLite with `EPHEMERAL_DEMO=true`. Everything stored on the live demo (accounts, feedback, imports, reports) is **erased whenever the free instance restarts, sleeps or is redeployed**, and the app shows a "Temporary demo" banner. Use it for evaluation with synthetic data only.
+
 Steps:
 1. Render Dashboard → **New → Blueprint** → connect GitHub repository `OlehDatsyk/feedbackmind-ai` → branch `main`.
-2. Review the resources and click **Apply**. Render creates the database first, then the API (migrations run on start) and the frontend.
+2. Review the resources and click **Apply**. Render builds the API (migrations run on start) and the frontend.
 3. Optional AI: in `feedbackmind-ai-api` → Environment, set `AI_PROVIDER` and the matching API key, then redeploy.
-4. Verify: `<api>/health/ready` returns `{"status":"ok","database":"ok"}`; open the frontend, register, load sample data.
+4. Verify: `<api>/health/ready` returns `{"status":"ok","database":"ok",...}`; open the frontend, register, load sample data.
+
+### Making data persistent (PostgreSQL)
+
+1. Create a PostgreSQL database: a Render PostgreSQL (paid plan, or free if the workspace's free slot is unused) or an external one such as Neon.
+2. In `feedbackmind-ai-api` → Environment set `DATABASE_URL` to its connection string (Render: the *Internal Database URL*) and delete `EPHEMERAL_DEMO`. In the Blueprint itself, follow the commented example at the top of `render.yaml`.
+3. Redeploy. Migrations create the schema on start; the banner disappears once `/health` reports `storage: persistent`.
 
 If you rename services, update `CORS_ORIGINS`, `FRONTEND_URL` (API) and `VITE_API_URL` (frontend) to the new URLs and redeploy both.
 
-Background work: free web services sleep after ~15 minutes without traffic. Jobs are stored in PostgreSQL and continue when the service wakes. For continuous processing use a paid instance, or set `EMBEDDED_WORKER=false` and add the worker service shown in `render.yaml`'s comments.
+Background work: free web services sleep after ~15 minutes without traffic. With PostgreSQL, jobs are stored in the database and continue when the service wakes. For continuous processing use a paid instance, or set `EMBEDDED_WORKER=false` and add the worker service shown in `render.yaml`'s comments.
 
-Never reset or delete the production database. Migrations are additive.
+Never reset or delete a production PostgreSQL database. Migrations are additive.
 
 ## 6. Administration
 
@@ -102,6 +110,7 @@ Never reset or delete the production database. Migrations are additive.
 | --- | --- |
 | "Cannot reach the FeedbackMind API" | Backend not running, or `VITE_API_URL` / `CORS_ORIGINS` mismatch |
 | `/health/ready` returns 503 | Database unreachable or migrations not applied (`alembic upgrade head`) |
+| Live demo account or data disappeared | Expected in temporary demo mode (`EPHEMERAL_DEMO=true`): data is erased on restart. Switch to PostgreSQL (section 5) |
 | Import rows rejected as "ambiguous date" | Choose *Day first* or *Month first* in the import options |
 | Characters look wrong in the import preview | Re-upload with an explicit encoding |
 | AI buttons disabled / "AI is not configured" | Set a provider and key (server or workspace) |
