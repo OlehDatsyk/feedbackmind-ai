@@ -1,0 +1,7 @@
+Review,Date,Stars,Product,Channel,Customer
+"Synthetic example: delivery took ten days and the box was damaged.",2026-03-01,1,Example Lamp,Example Reviews,EX-001
+"Synthetic example: great build quality, very happy with it.",2026-03-02,5,Example Lamp,Example Reviews,EX-002
+"Synthetic example: support answered quickly and solved my issue.",2026-03-03,5,Example App,Example Survey,EX-003
+"Synthetic example: the app is slow to load and crashes on checkout.",2026-03-04,2,Example App,Example Survey,EX-004
+"Synthetic example: price increased again, not good value anymore.",2026-03-05,2,Example Plan,Example Survey,EX-005
+"Synthetic example: row without a date is rejected by default.",,3,Example Plan,Example Survey,EX-006

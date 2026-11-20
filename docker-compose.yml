@@ -1,0 +1,58 @@
+# Local infrastructure for FeedbackMind AI.
+#   docker compose up -d db            -> PostgreSQL only (used by "Start App.bat" / local development)
+#   docker compose --profile full up   -> PostgreSQL + API + frontend containers
+# Data lives in the named volume "feedbackmind-pgdata"; nothing here deletes it.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: feedbackmind-db
+    environment:
+      POSTGRES_USER: feedbackmind
+      POSTGRES_PASSWORD: feedbackmind   # local development only - never use in production
+      POSTGRES_DB: feedbackmind
+    ports:
+      - "127.0.0.1:5436:5432"
+    volumes:
+      - feedbackmind-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U feedbackmind -d feedbackmind"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    profiles: ["full"]
+    build: ./backend
+    environment:
+      ENVIRONMENT: development
+      DATABASE_URL: postgresql+psycopg://feedbackmind:feedbackmind@db:5432/feedbackmind
+      SECRET_KEY: ${SECRET_KEY:-change-me-local-dev-only-0123456789abcdef}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:-}
+      CORS_ORIGINS: http://localhost:8080
+      FRONTEND_URL: http://localhost:8080
+      AI_PROVIDER: ${AI_PROVIDER:-none}
+      AI_MODEL: ${AI_MODEL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    profiles: ["full"]
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:8000
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - api
+
+volumes:
+  feedbackmind-pgdata:
+    name: feedbackmind-pgdata
